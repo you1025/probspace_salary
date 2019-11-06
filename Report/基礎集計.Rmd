@@ -1,0 +1,748 @@
+---
+title: "BasicReport"
+author: Shimajiro
+output:
+  html_document:
+    toc: true
+    toc_float: false
+    toc_depth: 2
+    number_section: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = F, warning = F)
+
+library(tidyverse)
+library(formattable)
+```
+
+```{r, include=F, cache=T}
+source("../functions.R", encoding = "utf-8")
+
+# Data Load
+df.train <- load_train_data("../data/input/train_data.csv")
+```
+
+# 基礎統計
+
+## salary
+
+```{r, include=F}
+avg_salary <- mean(df.train$salary)
+```
+
+
+- 欠損: `r sum(is.na(df.train$salary))`
+- 平均値: `r formattable::comma(avg_salary, digits = 0)`
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(salary)) +
+    geom_histogram(binwidth = 10, colour = "white") +
+#    geom_density(aes(y = ..count.. * 10), fill = "tomato", colour = "tomato", alpha = 1/3) +
+    geom_vline(xintercept = avg_salary, linetype = 2, colour = "tomato", size = 1) +
+    scale_x_continuous(limits = c(0, 1200)) +
+    labs(
+      y = NULL
+    )
+```
+
+
+## position
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::count(position) %>%
+  dplyr::mutate(ratio = n / sum(n)) %>%
+
+  ggplot(aes(position, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_y_continuous(labels = scales::comma, limits = c(0, 8500)) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = position), alpha = 1/2, show.legend = F) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(position ~ ., scales = "free_y")
+```
+
+
+## age
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age)) +
+    geom_histogram(binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+
+## area
+
+### カウント
+
+```{r, fig.align="center", fig.width=8, fig.height=5}
+df.train %>%
+
+  dplyr::count(area) %>%
+  dplyr::mutate(
+    ratio = n / sum(n),
+    area = forcats::fct_reorder(area, n)
+  ) %>%
+
+  ggplot(aes(area, n)) +
+    geom_col() +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=8, fig.height=5}
+cut_outof_ksd <- function(x, k=2) {
+  avg_x <- mean(x, na.rm = T)
+  sd_x  <- sd(x, na.rm = T)
+  ifelse(abs(x - avg_x) > k * sd_x, NA, x)
+}
+
+df.train %>%
+  dplyr::mutate(
+    # 外れ値の除去
+    salary = salary %>% cut_outof_ksd %>% cut_outof_ksd %>% cut_outof_ksd,
+    area = forcats::fct_reorder(area, salary, na.rm = T)
+  ) %>%
+
+  ggplot(aes(area, salary)) +
+    geom_boxplot() +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+
+## sex
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::count(sex) %>%
+  dplyr::mutate(
+    ratio = n / sum(n)
+  ) %>%
+
+  ggplot(aes(sex, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = sex), alpha = 1/2, show.legend = T) +
+    labs(
+      y = NULL
+    )
+```
+
+
+## partner
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::count(partner) %>%
+  dplyr::mutate(
+    ratio = n / sum(n)
+  ) %>%
+
+  ggplot(aes(partner, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = partner), alpha = 1/2, show.legend = T) +
+    labs(
+      y = NULL
+    )
+```
+
+
+## num child
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::count(num_child) %>%
+  dplyr::mutate(
+    ratio = n / sum(n)
+  ) %>%
+
+  ggplot(aes(num_child, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_x_continuous(breaks = 0:9) +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+#    salary = salary %>% cut_outof_ksd %>% cut_outof_ksd %>% cut_outof_ksd,
+    num_child = factor(num_child)
+  ) %>%
+
+  ggplot(aes(num_child, salary)) +
+    geom_boxplot()
+```
+
+
+## education
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::count(education) %>%
+  dplyr::mutate(
+    ratio = n / sum(n)
+  ) %>%
+
+  ggplot(aes(education, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_y_continuous(labels = scales::comma, limits = c(0, 9000)) +
+    labs(
+      y = NULL
+    ) +
+    theme_gray(base_family = "Osaka") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(education, salary)) +
+    geom_boxplot(aes(fill = education), alpha = 1/2, show.legend = F)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = education), alpha = 1/2, show.legend = F) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(education ~ ., scales = "free_y")
+```
+
+
+## service length
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length)) +
+    geom_histogram(binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+
+## study time
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time)) +
+    geom_histogram(binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_boxplot(aes(x = factor(study_time)))
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+
+## commute
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(commute)) +
+    geom_histogram(binwidth = 0.25, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+
+## overtime
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(overtime)) +
+    geom_histogram(binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(overtime, salary)) +
+    geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+
+## 新卒フラグ
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      d == 2 ~ "d_2",
+      d == 3 ~ "d_3",
+      d == 4 ~ "d_4",
+      d == 5 ~ "d_5",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:5, sep = "_"), "others"))
+  ) %>%
+  dplyr::count(flg) %>%
+  dplyr::mutate(ratio = n / sum(n)) %>%
+
+  ggplot(aes(flg, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    labs(
+      x = NULL,
+      y = NULL
+    )
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:1, sep = "_"), "others"))
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = flg), alpha = 1/2, show.legend = F) +
+    facet_grid(flg ~ ., scales = "free_y") +
+    labs(
+      x = NULL,
+      y = NULL
+    )
+```
+
+
+# 2変数間の関係
+
+## partner & num child
+
+```{r}
+df.train %>%
+
+  dplyr::count(partner, num_child) %>%
+  dplyr::mutate(n = formattable::comma(n, digits = 0)) %>%
+  tidyr::spread(key = num_child, value = n, fill = 0L) %>%
+
+  knitr::kable(
+    format = "html",
+    align = "c"
+  ) %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped"), full_width = F, position = "center") %>%
+  kableExtra::add_header_above(c(
+    " " = 1,
+    "num child" = 10
+  ))
+```
+
+### カウント
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    partner_child = ifelse(partner == 0, "no_partner", stringr::str_c("child", num_child, sep = "_")) %>%
+      factor(levels = c(
+        "no_partner",
+        stringr::str_c("child", 0:9, sep = "_")
+      ))
+  ) %>%
+
+  dplyr::count(partner_child) %>%
+  dplyr::mutate(ratio = n / sum(n)) %>%
+
+  ggplot(aes(partner_child, n)) +
+    geom_col() +
+    geom_text(aes(label = formattable::percent(ratio, digits = 1)), vjust = -0.5) +
+    scale_y_continuous(labels = scales::comma, limits = c(0, 11000), breaks = seq(0, 10000, 2500)) +
+    labs(y = NULL)
+```
+
+### salary との関係
+
+```{r, fig.align="center", fig.width=6, fig.height=9}
+df.train %>%
+
+  dplyr::mutate(
+    partner_child = ifelse(partner == 0, "no_partner", stringr::str_c("child", num_child, sep = "_")) %>%
+      factor(levels = c(
+        "no_partner",
+        stringr::str_c("child", 0:9, sep = "_")
+      ))
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = partner_child), alpha = 1/2, show.legend = F) +
+    labs(y = NULL) +
+    facet_grid(partner_child ~ ., scales = "free_y")
+```
+
+
+## 新卒フラグ & age
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:1, sep = "_"), "others"))
+  ) %>%
+
+  ggplot(aes(age, salary)) +
+    geom_point(aes(colour = flg), alpha = 1/3) +
+    geom_smooth(aes(colour = flg), method = "lm") +
+    facet_grid(flg ~ .)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:1, sep = "_"), "others"))
+  ) %>%
+
+  ggplot(aes(age, salary)) +
+    geom_point(aes(colour = flg), alpha = 1/3) +
+    geom_smooth(aes(colour = flg), method = "lm")
+```
+
+## 新卒フラグ & service length
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:1, sep = "_"), "others"))
+  ) %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_point(aes(colour = flg), alpha = 1/3) +
+    geom_smooth(aes(colour = flg), method = "lm") +
+    facet_grid(flg ~ .)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    d = age - base_age - service_length,
+    flg = dplyr::case_when(
+      d == 0 ~ "d_0",
+      d == 1 ~ "d_1",
+      T      ~ "others"
+    ) %>%
+      factor(levels = c(stringr::str_c("d", 0:1, sep = "_"), "others"))
+  ) %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_point(aes(colour = flg), alpha = 1/3) +
+    geom_smooth(aes(colour = flg), method = "lm")
+```
+
+
+## position & age
+
+```{r, fig.align="center", fig.width=7, fig.height=9}
+df.train %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd %>%
+      cut_outof_ksd %>%
+      cut_outof_ksd
+  ) %>%
+
+  dplyr::mutate(
+    age_segment = dplyr::case_when(
+      age <= 20 ~ "age_lte_20",
+      dplyr::between(age, 21, 30) ~ "age_21_30",
+      dplyr::between(age, 31, 40) ~ "age_31_40",
+      dplyr::between(age, 41, 50) ~ "age_41_50",
+      dplyr::between(age, 51, 60) ~ "age_51_60",
+      T                           ~ "age_gte_61"
+    ) %>%
+      factor(levels = c(
+        "age_lte_20",
+        "age_21_30",
+        "age_31_40",
+        "age_41_50",
+        "age_51_60",
+        "age_gte_61"
+      ))
+  ) %>%
+
+  ggplot(aes(position, salary)) +
+    geom_boxplot(aes(fill = position), alpha = 1/2, show.legend = F) +
+    facet_grid(age_segment ~ .)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=9}
+df.train %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd %>%
+      cut_outof_ksd %>%
+      cut_outof_ksd
+  ) %>%
+
+  dplyr::mutate(
+    age_segment = dplyr::case_when(
+      age <= 20 ~ "age_lte_20",
+      dplyr::between(age, 21, 30) ~ "age_21_30",
+      dplyr::between(age, 31, 40) ~ "age_31_40",
+      dplyr::between(age, 41, 50) ~ "age_41_50",
+      dplyr::between(age, 51, 60) ~ "age_51_60",
+      T                           ~ "age_gte_61"
+    ) %>%
+      factor(levels = c(
+        "age_lte_20",
+        "age_21_30",
+        "age_31_40",
+        "age_41_50",
+        "age_51_60",
+        "age_gte_61"
+      ))
+  ) %>%
+
+  ggplot(aes(age_segment, salary)) +
+    geom_boxplot(aes(fill = position), alpha = 1/2, show.legend = F) +
+    facet_grid(position ~ .)
+```
+
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(alpha = 1/3, aes(colour = position), alpha = 1/3, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm") +
+    facet_grid(position ~ .)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(alpha = 1/3, aes(colour = position), alpha = 1/4, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm", size = 2)
+```
+
