@@ -23,6 +23,16 @@ source("../functions.R", encoding = "utf-8")
 df.train <- load_train_data("../data/input/train_data.csv")
 ```
 
+```{r, include=F}
+cut_outof_ksd <- function(x, k=2) {
+  avg_x <- mean(x, na.rm = T)
+  sd_x  <- sd(x, na.rm = T)
+  ifelse(abs(x - avg_x) > k * sd_x, NA, x)
+}
+```
+
+
+
 # 基礎統計
 
 ## salary
@@ -97,6 +107,19 @@ df.train %>%
     )
 ```
 
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age)) +
+    geom_histogram(aes(fill = position), binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(position ~ ., scales = "free_y")
+```
+
+
 ### salary との関係
 
 ```{r, fig.align="center", fig.width=7, fig.height=5}
@@ -104,6 +127,48 @@ df.train %>%
 
   ggplot(aes(age, salary)) +
     geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5) +
+    geom_smooth(aes(colour = education), method = "lm") +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5) +
+    geom_smooth(aes(colour = education), method = "lm") +
+    scale_y_log10() +
+    facet_grid(education ~ .)
+```
+
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5) +
+    geom_smooth(aes(colour = position), method = "lm") +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(age, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5) +
+    geom_smooth(aes(colour = position), method = "lm") +
+    scale_y_log10() +
+    facet_grid(position ~ .)
 ```
 
 
@@ -133,12 +198,6 @@ df.train %>%
 ### salary との関係
 
 ```{r, fig.align="center", fig.width=8, fig.height=5}
-cut_outof_ksd <- function(x, k=2) {
-  avg_x <- mean(x, na.rm = T)
-  sd_x  <- sd(x, na.rm = T)
-  ifelse(abs(x - avg_x) > k * sd_x, NA, x)
-}
-
 df.train %>%
   dplyr::mutate(
     # 外れ値の除去
@@ -323,6 +382,35 @@ df.train %>%
     )
 ```
 
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length)) +
+    geom_histogram(aes(fill = position), binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(position ~ ., scales = "free_y")
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length)) +
+    geom_histogram(aes(fill = education), binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(education ~ ., scales = "free_y")
+```
+
+
 ### salary との関係
 
 ```{r, fig.align="center", fig.width=7, fig.height=5}
@@ -330,6 +418,48 @@ df.train %>%
 
   ggplot(aes(service_length, salary)) +
     geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm", show.legend = F) +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm", show.legend = F) +
+    scale_y_log10() +
+    facet_grid(position ~ .)
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = education), method = "lm", show.legend = F) +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(service_length, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = education), method = "lm", show.legend = F) +
+    scale_y_log10() +
+    facet_grid(education ~ .)
 ```
 
 
@@ -348,6 +478,35 @@ df.train %>%
     )
 ```
 
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time)) +
+    geom_histogram(aes(fill = position), binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(position ~ ., scales = "free_y")
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time)) +
+    geom_histogram(aes(fill = education), binwidth = 1, colour = "gray") +
+    scale_y_continuous(labels = scales::comma) +
+    labs(
+      y = NULL
+    ) +
+    facet_grid(education ~ ., scales = "free_y")
+```
+
+
 ### salary との関係
 
 ```{r, fig.align="center", fig.width=7, fig.height=5}
@@ -363,6 +522,49 @@ df.train %>%
   ggplot(aes(study_time, salary)) +
     geom_jitter(size = 0.75, alpha = 1/5)
 ```
+
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm") +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_jitter(aes(colour = position), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = position), method = "lm") +
+    scale_y_log10() +
+    facet_grid(position ~ .)
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = education), method = "lm") +
+    scale_y_log10()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(study_time, salary)) +
+    geom_jitter(aes(colour = education), size = 0.75, alpha = 1/5, show.legend = F) +
+    geom_smooth(aes(colour = education), method = "lm") +
+    scale_y_log10() +
+    facet_grid(education ~ .)
+```
+
 
 
 ## commute
@@ -389,6 +591,13 @@ df.train %>%
     geom_jitter(size = 0.75, alpha = 1/5)
 ```
 
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = partner), size = 0.75, alpha = 1/5) +
+    scale_y_log10()
+```
 
 ## overtime
 
@@ -412,6 +621,15 @@ df.train %>%
 
   ggplot(aes(overtime, salary)) +
     geom_jitter(size = 0.75, alpha = 1/5)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(overtime, salary)) +
+    geom_jitter(aes(colour = partner), size = 0.75, alpha = 1/5)
++
+    facet_grid(partner ~ .)
 ```
 
 
@@ -744,5 +962,20 @@ df.train %>%
   ggplot(aes(age, salary)) +
     geom_jitter(alpha = 1/3, aes(colour = position), alpha = 1/4, show.legend = F) +
     geom_smooth(aes(colour = position), method = "lm", size = 2)
+```
+
+## position & education
+
+```{r, fig.align="center", fig.width=7, fig.height=9}
+df.train %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  ggplot(aes(y = salary)) +
+    geom_boxplot(aes(fill = position), show.legend = F) +
+    facet_grid(position ~ education)
 ```
 

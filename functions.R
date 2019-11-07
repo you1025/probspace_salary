@@ -9,13 +9,13 @@ load_train_data <- function(path) {
     path,
     col_types = cols(
       id = col_integer(),
-      position = col_factor(levels = 0:4),
+      position = readr::col_factor(levels = 0:4),
       age = col_integer(),
-      area = col_factor(),
-      sex = col_factor(levels = 1:2),
-      partner = col_factor(levels = 0:1),
+      area = readr::col_factor(),
+      sex = readr::col_factor(levels = 1:2),
+      partner = readr::col_factor(levels = 0:1),
       num_child = col_integer(),
-      education = col_factor(levels = 0:4),
+      education = readr::col_factor(levels = 0:4),
       service_length = col_integer(),
       study_time = col_double(),
       commute = col_double(),
@@ -32,13 +32,13 @@ load_test_data <- function(path) {
     path,
     col_types = cols(
       id = col_integer(),
-      position = col_factor(levels = 0:4),
+      position = readr::col_factor(levels = 0:4),
       age = col_integer(),
-      area = col_factor(),
-      sex = col_factor(levels = 1:2),
-      partner = col_factor(levels = 0:1),
+      area = readr::col_factor(),
+      sex = readr::col_factor(levels = 1:2),
+      partner = readr::col_factor(levels = 0:1),
       num_child = col_integer(),
-      education = col_factor(levels = 0:4),
+      education = readr::col_factor(levels = 0:4),
       service_length = col_integer(),
       study_time = col_double(),
       commute = col_double(),
@@ -46,4 +46,5 @@ load_test_data <- function(path) {
     )
   )
 }
-#df.test <- load_test_data("data/input/test_data.csv")
+#load_test_data("data/input/test_data.csv")
+
