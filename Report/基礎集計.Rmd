@@ -591,37 +591,6 @@ df.train %>%
     geom_jitter(size = 0.75, alpha = 1/5)
 ```
 
-k = 3 でクラスタリングして右端の集団を捕まえて特徴を見ていくと何か分かるかもしれない
-
-```{r, fig.align="center", fig.width=7, fig.height=5}
-df.train %>%
-
-  ggplot(aes(commute, salary)) +
-    geom_jitter(aes(colour = partner), size = 0.75, alpha = 1/5) +
-    scale_y_log10()
-```
-
-```{r, fig.align="center", fig.width=7, fig.height=5}
-df.train %>%
-
-  dplyr::mutate(commute_segment = cut(df.train$commute, breaks = seq(0, 5, 1))) %>%
-
-  dplyr::group_by(partner, commute_segment) %>%
-  dplyr::summarise(
-    n = n(),
-    ratio = mean(salary, na.rm = T) / avg_salary
-  ) %>%
-  dplyr::ungroup() %>%
-
-  ggplot(aes(commute_segment, partner)) +
-    geom_tile(aes(fill = ratio), colour = "black") +
-    scale_fill_gradient2(low = "blue", mid = "white", high = "tomato", midpoint = 1) +
-    geom_text(aes(label = formattable::percent(ratio, digits = 0)), size = 5) +
-    geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
-    scale_size_area(max_size = 30)
-```
-
-
 
 ## overtime
 
@@ -1021,3 +990,87 @@ df.train %>%
     scale_size_area(max_size = 35)
 ```
 
+## commute & partner
+
+partner でほぼ 2 分される事が分かる
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = partner), size = 0.75, alpha = 1/5) +
+    scale_y_log10()
+```
+
+- partner の有無で分割するとさらに都市で分割される
+- 具体的には [東京, 大阪] と "それ以外" に分かれる
+- 東京と大阪にほぼ違いは無い
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area == "東京都" ~ "tokyo",
+      area == "大阪府" ~ "osaka",
+      T ~ "others"
+    ) %>%
+      factor()
+  ) %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = area_segment), size = 0.75, alpha = 1/5) +
+    facet_grid(partner ~ .)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    partner_area_segment = dplyr::case_when(
+      (partner == 0) &  (area %in% c("東京都", "大阪府")) ~ "single_bigcity",
+      (partner == 0) & !(area %in% c("東京都", "大阪府")) ~ "single_others",
+      (partner == 1) &  (area %in% c("東京都", "大阪府")) ~ "family_bigcity",
+      (partner == 1) & !(area %in% c("東京都", "大阪府")) ~ "family_others"
+    ),
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "area_bigcity",
+      T ~ "area_others"
+    ),
+
+    commute_segment = cut(df.train$commute, breaks = seq(0, 5, 1))
+  ) %>%
+
+  # dplyr::group_by(commute_segment, area_segment, partner) %>%
+  # dplyr::summarise(
+  #   n = n(),
+  #   ratio = mean(salary, na.rm = T) / avg_salary
+  # ) %>%
+  # dplyr::ungroup() %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_point(aes(colour = partner_area_segment), alpha = 1/2) +
+    geom_smooth(aes(colour = partner_area_segment), method = "lm") +
+    scale_y_log10() +
+    facet_grid(partner ~ .)
+```
+
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(commute_segment = cut(df.train$commute, breaks = seq(0, 5, 1))) %>%
+
+  dplyr::group_by(partner, commute_segment) %>%
+  dplyr::summarise(
+    n = n(),
+    ratio = mean(salary, na.rm = T) / avg_salary
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute_segment, partner)) +
+    geom_tile(aes(fill = ratio), colour = "black") +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "tomato", midpoint = 1) +
+    geom_text(aes(label = formattable::percent(ratio, digits = 0)), size = 5) +
+    geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
+    scale_size_area(max_size = 30)
+```
