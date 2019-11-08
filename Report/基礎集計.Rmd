@@ -591,6 +591,8 @@ df.train %>%
     geom_jitter(size = 0.75, alpha = 1/5)
 ```
 
+k = 3 でクラスタリングして右端の集団を捕まえて特徴を見ていくと何か分かるかもしれない
+
 ```{r, fig.align="center", fig.width=7, fig.height=5}
 df.train %>%
 
@@ -598,6 +600,28 @@ df.train %>%
     geom_jitter(aes(colour = partner), size = 0.75, alpha = 1/5) +
     scale_y_log10()
 ```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(commute_segment = cut(df.train$commute, breaks = seq(0, 5, 1))) %>%
+
+  dplyr::group_by(partner, commute_segment) %>%
+  dplyr::summarise(
+    n = n(),
+    ratio = mean(salary, na.rm = T) / avg_salary
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute_segment, partner)) +
+    geom_tile(aes(fill = ratio), colour = "black") +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "tomato", midpoint = 1) +
+    geom_text(aes(label = formattable::percent(ratio, digits = 0)), size = 5) +
+    geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
+    scale_size_area(max_size = 30)
+```
+
+
 
 ## overtime
 
@@ -979,7 +1003,7 @@ df.train %>%
 
 ## position & sex
 
-```{r}
+```{r, fig.align="center", fig.width=7, fig.height=5}
 df.train %>%
 
   dplyr::group_by(position, sex) %>%
