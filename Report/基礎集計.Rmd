@@ -1022,7 +1022,151 @@ df.train %>%
     facet_grid(partner ~ .)
 ```
 
+更に子供の数で分割可能
+
 ```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "bigcity",
+      T ~ "others"
+    ) %>%
+      factor()
+  ) %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = factor(num_child)), size = 0.75, alpha = 1/5) +
+    facet_grid(partner ~ area_segment)
+```
+
+地方都市 & 既婚者 のみで考えてみる
+
+ざっくり 0 とそれ以外で考えても良さそうな雰囲気
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::filter(
+    !(area %in% c("東京都", "大阪府"))
+    & (partner == 1)
+  ) %>%
+
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "bigcity",
+      T ~ "others"
+    ) %>%
+      factor(),
+    # num_child = factor(num_child) %>%
+    #   forcats::fct_collapse(
+    #     `1_9` = c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+    #   )
+  ) %>%
+
+  dplyr::group_by(commute, num_child) %>%
+  dplyr::summarise(
+    n = n(),
+    avg = mean(salary)
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute, avg)) +
+    geom_line(aes(colour = factor(num_child), group = num_child)) +
+    geom_point(aes(colour = factor(num_child), size = n)) +
+    scale_size_area()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+
+  dplyr::filter(
+    !(area %in% c("東京都", "大阪府"))
+    & (partner == 1)
+  ) %>%
+
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "bigcity",
+      T ~ "others"
+    ) %>%
+      factor(),
+    num_child = factor(num_child) %>%
+      forcats::fct_collapse(
+        `1_9` = c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+      )
+  ) %>%
+
+  dplyr::group_by(commute, num_child) %>%
+  dplyr::summarise(
+    n = n(),
+    avg = mean(salary)
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute, avg)) +
+    geom_line(aes(colour = factor(num_child), group = num_child)) +
+    geom_point(aes(colour = factor(num_child), size = n)) +
+    scale_size_area()
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+  
+  dplyr::filter(
+    !(area %in% c("東京都", "大阪府"))
+    & (partner == 1)
+  ) %>%
+  
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "bigcity",
+      T ~ "others"
+    ) %>%
+      factor(),
+    num_child = factor(num_child) %>%
+      forcats::fct_collapse(
+        `1_9` = c("1", "2", "3", "4", "5", "6", "7", "8", "9")
+      )
+  ) %>%
+  
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = num_child), size = 0.75, alpha = 1/5)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+  dplyr::mutate(
+    area_segment = dplyr::case_when(
+      area %in% c("東京都", "大阪府") ~ "bigcity",
+      T ~ "others"
+    ) %>%
+      factor()
+  ) %>%
+
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = (num_child > 0)), size = 0.75, alpha = 1/5, show.legend = F) +
+    facet_grid(partner ~ area_segment)
+```
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.train %>%
+  
+  dplyr::filter(
+    area %in% c("東京都", "大阪府")
+    & partner == 1
+    & num_child > 0
+  ) %>%
+
+  dplyr::mutate(
+    overtime = cut(service_length, breaks = seq(-1, 70, 10))
+  ) %>%
+  
+  ggplot(aes(commute, salary)) +
+    geom_jitter(aes(colour = overtime), size = 2, alpha = 1/2)
+```
+
+
+```{r, fig.align="center", fig.width=8, fig.height=5}
 df.train %>%
 
   dplyr::mutate(
@@ -1074,3 +1218,33 @@ df.train %>%
     geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
     scale_size_area(max_size = 30)
 ```
+
+```{r, fig.align="center", fig.width=9, fig.height=5}
+df.train %>%
+
+  dplyr::mutate(
+    commute_segment = cut(df.train$commute, breaks = seq(0, 5, 0.5)),
+    partner_area_segment = dplyr::case_when(
+      (partner == 0) &  (area %in% c("東京都", "大阪府")) ~ "single_bigcity",
+      (partner == 0) & !(area %in% c("東京都", "大阪府")) ~ "single_country",
+      (partner == 1) &  (area %in% c("東京都", "大阪府")) ~ "family_bigcity",
+      (partner == 1) & !(area %in% c("東京都", "大阪府")) ~ "family_country"
+    )
+  ) %>%
+
+  dplyr::group_by(partner_area_segment, commute_segment) %>%
+  dplyr::summarise(
+    n = n(),
+    ratio = mean(salary, na.rm = T) / avg_salary
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute_segment, partner_area_segment)) +
+    geom_tile(aes(fill = ratio), colour = "black") +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "tomato", midpoint = 1) +
+    geom_text(aes(label = formattable::percent(ratio, digits = 0))) +
+    geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
+    scale_size_area(max_size = 30)
+
+```
+
