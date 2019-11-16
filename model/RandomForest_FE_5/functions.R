@@ -32,5 +32,5 @@ add_features_per_category <- function(target_data, train_data) {
     # flg_service_length_0 ごとの salary 平均
     add_feature_per_category(train_data, flg_service_length_0, salary)
 }
-recipes::prep(recipe) %>% juice() %>% add_features_per_category(., .) %>% View
+#recipes::prep(recipe) %>% juice() %>% add_features_per_category(., .) %>% View
 
