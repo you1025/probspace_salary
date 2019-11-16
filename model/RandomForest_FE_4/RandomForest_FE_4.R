@@ -1,44 +1,3 @@
-# TODO
-# - 記録上の値になるように RF を戻す(これはもうしゃーない)
-# - CV を入れて MAE で評価する方式に切り替える(OK)
-# - 特徴量エンジニアリング！ この前のとこまで(OK)
-# - パラメータチューニング(OK)
-# - max.depth を指定してみる(うーん・・・)
-# - Submit! 今日はここまでが目標です！(OK)
-
-# mtry: 12, min_n: 11, trees: 1700, oob_rmse: 33.6, train_mae: 12.3, test_mae: 22.4
-# mtry: 12, min_n: 11, trees: 1700, oob_rmse: 32.99678, train_mae: 12.58253, test_mae: 22.0715
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.01727, train_mae: 12.96376, test_mae: 22.07845
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.03698, train_mae: 13.01689, test_mae: 22.08932 ↓ - 平社員フラグの導入
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.01727, train_mae: 12.96376, test_mae: 22.07845 ↑ - clipping(commute)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.01095, train_mae: 12.85109, test_mae: 22.08067 ↓ - clipping(overtime)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.01577, train_mae: 12.97231, test_mae: 22.08165 ↓ - clipping(study_time)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.41681, train_mae: 13.38839, test_mae: 22.22809    - カテゴリの代表値追加処理を除去(間違ってたorz)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.25839, train_mae: 13.3736,  test_mae: 22.07932 ↑ - position ごとの salary 平均を追加
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.28411, train_mae: 13.09873, test_mae: 22.08658 ↓ - area ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.25422, train_mae: 13.44836, test_mae: 22.08818 ↓ - area_segment ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.25572, train_mae: 13.43882, test_mae: 22.10189 ↓ - sex ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.261,   train_mae: 13.44902, test_mae: 22.08931 ↓ - partner ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.24336, train_mae: 13.4424,  test_mae: 22.09015 ↓ - num_child ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.23214, train_mae: 13.44226, test_mae: 22.0801  ↓ - flg_child ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.36009, train_mae: 13.44536, test_mae: 22.12514 ↓ - education ごとの salary 平均(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.22137, train_mae: 13.42774, test_mae: 22.06303 ↑ - position ごとの commute 平均
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.02435, train_mae: 13.47694, test_mae: 21.96275 ↑ - position ごとの commute 平均との差・比
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.03454, train_mae: 12.98316, test_mae: 22.09191 ↓ - area ごとの commute の平均・差・比(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 32.77051, train_mae: 13.62359, test_mae: 21.91387 ↑ - area_segment ごとの commute の平均・差・比
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 32.95606, train_mae: 13.82111, test_mae: 22.09609 ↓ - sex ごとの commute 平均・差・比(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 33.01,    train_mae: 13.90751, test_mae: 22.08793 ↓ - partner ごとの commute 平均・差・比(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 32.67231, train_mae: 13.76527, test_mae: 21.95321 ↓ - num_child ごとの commute 平均・差・比(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 32.64794, train_mae: 13.79577, test_mae: 21.92917 ↓ - flg_child ごとの commute 平均・差・比(除去)
-# mtry: 12, min_n: 12, trees: 1400, oob_rmse: 32.88578, train_mae: 13.64312, test_mae: 21.96463 ↓ - education ごとの commute 平均・差・比(除去)
-
-# mtry: xx, min_n: xx, trees: xxxx, oob_rmse: xxxxxxxx, train_mae: xxxxxxxx, test_mae: xxxxxxxx
-# mtry: 13, min_n: 12, trees: 1400, oob_rmse: 32.77024, train_mae: 13.48326, test_mae: 21.88381
-# mtry: 14, min_n: 12, trees: 1400, oob_rmse: 32.72223, train_mae: 13.35133, test_mae: 21.87503
-# mtry: 14, min_n: 11, trees: 1100, oob_rmse: 32.71504, train_mae: 12.96384, test_mae: 21.85096
-
-# mtry: 14, min_n: 11, trees: 1100, oob_rmse: 43.56951, train_mae: 28.63744, test_mae: 29.50092
-
 
 
 library(tidyverse)
@@ -47,7 +6,7 @@ library(furrr)
 
 set.seed(1025)
 
-source("functions.R", encoding = "utf-8")
+source("model/RandomForest_FE_4/functions.R", encoding = "utf-8")
 
 
 # Data Load ---------------------------------------------------------------
