@@ -49,6 +49,7 @@ load_test_data <- function(path) {
 #load_test_data("data/input/test_data.csv")
 
 
+# Clipping
 clip_outlier <- function(x, threshold = 0.99) {
   x_threshold <- quantile(x, probs = threshold)
   ifelse(x < x_threshold, x, x_threshold)
