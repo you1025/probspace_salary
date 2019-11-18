@@ -1245,6 +1245,37 @@ df.train %>%
     geom_text(aes(label = formattable::percent(ratio, digits = 0))) +
     geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
     scale_size_area(max_size = 30)
+```
 
+```{r, fig.align="center", fig.width=12, fig.height=7}
+df.train %>%
+
+  dplyr::mutate(
+    commute_segment = cut(df.train$commute, breaks = seq(0, 5, 0.5)),
+
+    # area x partner x child
+    area_partner_child_segment = dplyr::case_when(
+       (area %in% c("東京都", "大阪府")) & (partner == 0) & (num_child == 0) ~ "bigcity_single_nochild",
+       (area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child == 0) ~ "bigcity_family_nochild",
+       (area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child >  0) ~ "bigcity_family_child",
+      !(area %in% c("東京都", "大阪府")) & (partner == 0) & (num_child == 0) ~ "country_single_nochild",
+      !(area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child == 0) ~ "country_family_nochild",
+      !(area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child >  0) ~ "country_family_child"
+    )
+  ) %>%
+
+  dplyr::group_by(area_partner_child_segment, commute_segment) %>%
+  dplyr::summarise(
+    n = n(),
+    ratio = mean(salary, na.rm = T) / avg_salary
+  ) %>%
+  dplyr::ungroup() %>%
+
+  ggplot(aes(commute_segment, area_partner_child_segment)) +
+    geom_tile(aes(fill = ratio), colour = "black") +
+    scale_fill_gradient2(low = "blue", mid = "white", high = "tomato", midpoint = 1) +
+    geom_text(aes(label = formattable::percent(ratio, digits = 0))) +
+    geom_point(aes(size = n), colour = "gray", alpha = 1/2, show.legend = F) +
+    scale_size_area(max_size = 30)
 ```
 
