@@ -970,6 +970,22 @@ df.train %>%
     facet_grid(position ~ education)
 ```
 
+2 群あるね
+
+```{r, fig.align="center", fig.width=7, fig.height=9}
+df.train %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_histogram(aes(fill = position)) +
+    facet_grid(position ~ education, scales = "free_y")
+```
+
+
 ## position & sex
 
 ```{r, fig.align="center", fig.width=7, fig.height=5}
@@ -1279,3 +1295,251 @@ df.train %>%
     scale_size_area(max_size = 30)
 ```
 
+
+## 他社 vs 社内
+
+```{r}
+df.term_info <- df.train %>%
+
+  dplyr::mutate(
+    # 新卒フラグ
+    base_age = dplyr::case_when(
+      education == 0 ~ 18,
+      education == 1 ~ 20,
+      education == 2 ~ 22,
+      education == 3 ~ 24,
+      education == 4 ~ 27
+    ),
+    working_years = age - base_age,
+    other_company_years = working_years - service_length,
+
+    ratio_service_length_per_working_years = ifelse(working_years == 0, 1, service_length / working_years)
+  )
+```
+
+### 労働年数 と 給与
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+ df.term_info %>%
+
+  ggplot(aes(working_years, salary)) +
+    geom_jitter(alpha = 1/5)
+```
+
+### working_years & commute
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+  ggplot(aes(working_years, commute)) +
+    geom_jitter(alpha = 1/5)
+```
+
+
+
+### 他社期間 と 給与
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(other_company_years, salary)) +
+    geom_jitter(alpha = 1/5)
+```
+
+### 労働年数における自社期間 と 給与
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years, salary)) +
+    geom_jitter(alpha = 1/5)
+```
+
+### 労働年数における自社期間
+
+ほぼ 2 群に分割される
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05)
+```
+
+#### position 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(position ~ ., scales = "free_y")
+```
+
+#### area 別
+
+ほぼ違いは見られない
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  dplyr::mutate(
+    area_segment = (area %in% c("東京都", "大阪府"))
+  ) %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(area_segment ~ ., scales = "free_y")
+```
+
+#### sex 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(sex ~ ., scales = "free_y")
+```
+
+#### partner 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(partner ~ ., scales = "free_y")
+```
+
+#### education 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(education ~ ., scales = "free_y")
+```
+
+#### position_education_segment 別
+
+```{r, fig.align="center", fig.width=10, fig.height=7}
+df.term_info %>%
+
+  dplyr::mutate(
+    # position x education
+    position_education_segment = stringr::str_c("position", position, "education", education, sep = "_") %>%
+      factor()
+  ) %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(aes(fill = position), binwidth = 0.05) +
+    facet_wrap(position_education_segment ~ ., scales = "free_y")
+```
+
+#### area_partner_child_segment 別
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  dplyr::mutate(
+    # area x partner x child
+    area_partner_child_segment = dplyr::case_when(
+       (area %in% c("東京都", "大阪府")) & (partner == 0) & (num_child == 0) ~ "bigcity_single_nochild",
+       (area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child == 0) ~ "bigcity_family_nochild",
+       (area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child >  0) ~ "bigcity_family_child",
+      !(area %in% c("東京都", "大阪府")) & (partner == 0) & (num_child == 0) ~ "country_single_nochild",
+      !(area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child == 0) ~ "country_family_nochild",
+      !(area %in% c("東京都", "大阪府")) & (partner == 1) & (num_child >  0) ~ "country_family_child"
+    )
+  ) %>%
+
+  ggplot(aes(ratio_service_length_per_working_years)) +
+    geom_histogram(binwidth = 0.05) +
+    facet_grid(area_partner_child_segment ~ ., scales = "free_y")
+```
+
+### 生え抜きフラグ & position と salary の関係
+
+```{r, fig.align="center", fig.width=7, fig.height=5}
+df.term_info %>%
+
+  dplyr::mutate(
+    flg_trueborn = (ratio_service_length_per_working_years == 1)
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = flg_trueborn), alpha = 1/3) +
+    facet_grid(position ~ ., scale = "free_y")
+```
+
+### 生え抜きフラグ & position & education と salary の関係
+
+```{r, fig.align="center", fig.width=10, fig.height=7}
+df.term_info %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  dplyr::mutate(
+    # 生え抜きフラグ
+    flg_trueborn = (ratio_service_length_per_working_years == 1),
+
+    # position x education
+    position_education_trueborn_segment = stringr::str_c(
+      "position", position,
+      "education", education,
+      "trueborn", as.integer(flg_trueborn),
+      sep = "_"
+    ) %>%
+      factor()
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = flg_trueborn), alpha = 1/3) +
+    facet_grid(position ~ education, scales = "free_y")
+```
+
+partner の有無で全然違う
+
+```{r, fig.align="center", fig.width=10, fig.height=7}
+df.term_info %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  ggplot(aes(partner, salary)) +
+    geom_boxplot(aes(fill = position), alpha = 1/5, size = 1) +
+    facet_grid(position ~ education)
+```
+
+```{r, fig.align="center", fig.width=10, fig.height=7}
+df.term_info %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  ggplot(aes(salary)) +
+    geom_density(aes(fill = partner), alpha = 1/5, size = 1) +
+    facet_grid(position ~ education)
+```
+
+
+```{r, fig.align="center", fig.width=10, fig.height=7}
+df.term_info %>%
+
+  dplyr::mutate(
+    salary = salary %>%
+      cut_outof_ksd(k = 4)
+  ) %>%
+
+  ggplot(aes(partner, salary)) +
+    geom_jitter(alpha = 1/5, size = 1) +
+    facet_grid(position ~ education)
+```
