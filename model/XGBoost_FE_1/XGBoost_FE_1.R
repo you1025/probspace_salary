@@ -379,6 +379,9 @@ system.time(
         parsnip::set_args(
           model,
 
+          trees = trees,
+          learn_rate = learn_rate,
+
           tree_depth = tree_depth,
           min_n = min_n,
           loss_reduction = loss_reduction,
