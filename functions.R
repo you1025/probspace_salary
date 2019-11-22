@@ -69,7 +69,9 @@ categorical_value <- function(data, feature, target = salary) {
     dplyr::summarise(
       n = n(),
       avg = mean(!!target, na.rm = T),
-      med = median(!!target, na.rm = T)
+#      med = median(!!target, na.rm = T),
+      min = min(!!target, na.rm = T),
+      max = max(!!target, na.rm = T)
     ) %>%
 
     dplyr::mutate(n_ratio = n / sum(n)) %>%
@@ -79,7 +81,9 @@ categorical_value <- function(data, feature, target = salary) {
       n,
       n_ratio,
       avg,
-      med
+#      med,
+      min,
+      max
     )
 }
 #categorical_value(df.train_data, position, salary)
