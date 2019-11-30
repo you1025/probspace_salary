@@ -1,0 +1,7 @@
+area_partner_child_segment,label
+country_single_nochild,0
+country_family_child,1
+country_family_nochild,2
+bigcity_family_child,3
+bigcity_single_nochild,4
+bigcity_family_nochild,5
