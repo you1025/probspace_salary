@@ -301,7 +301,7 @@ replace_category_label <- function(target_data, category) {
 
 
 get_dummies <- function(data) {
-  recipes::recipe(salary ~ ., data) %>%
+  recipes::recipe(~ ., data) %>%
     recipes::step_dummy(all_nominal(), one_hot = F) %>%
     recipes::prep() %>%
     recipes::juice()
@@ -322,22 +322,138 @@ transform_categories <- function(data) {
     get_dummies()
 }
 
+scaling <- function(data) {
+  # スケーリング対象外データの退避
+  salary <- data$salary
+  area_partner_child_segment <- data$area_partner_child_segment
 
-create_lmer_model <- function(train_data, if_print = F) {
+  data %>%
+    dplyr::select(-salary, -area_partner_child_segment) %>%
+    get_dummies() %>%
+    scale() %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(
+      salary = salary,
+      area_partner_child_segment = area_partner_child_segment
+    )
+}
+
+
+create_lmer_model <- function(data) {
 
   model <- lme4::lmer(
     salary ~
       commute
-      + area_partner_child_segment
-#      + age
+      + age
+      + num_child
+##      + service_length
+      + study_time
+      + overtime
+      + flg_staff
+      + working_years
+#      + flg_newbie
+      + flg_area_partner_child_commute_extra_high
+      + flg_area_partner_child_commute_high
+      + flg_area_partner_child_commute_low
+#      + flg_area_partner_child_commute_extra_low
+      + position_median_commute
+#      + education_max_salary
+      + position_education_partner_segment_median_salary
+      + position_education_partner_segment_median_commute
+      + area_median_salary
+#      + area_partner_child_segment_mean_salary
+      + ratio_area_partner_child_segment_mean_commute
+      + ratio_flg_area_partner_child_commute_extra_high_mean_commute
+      + flg_area_partner_child_commute_high_mean_salary
+      + flg_area_partner_child_commute_high_max_salary
+#      + flg_area_partner_child_commute_high_mean_commute
+      + flg_area_partner_child_commute_high_median_commute
+      + flg_area_partner_child_commute_low_median_salary
+      + ratio_flg_area_partner_child_commute_low_mean_commute
+      + flg_area_partner_child_commute_extra_low_max_salary
+#      + ratio_flg_area_partner_child_commute_extra_low_mean_commute
+      + ratio_flg_area_partner_child_commute_extra_low_max_commute
+##      + position_X1
+      + position_X2
+#      + position_X3
+#      + position_X4
+#      + area_奈良県
+##      + area_山口県
+#      + area_東京都
+#      + area_鹿児島県
+#      + area_兵庫県
+      + area_神奈川県
+#      + area_宮城県
+#      + area_茨城県
+#      + area_岩手県
+#      + area_鳥取県
+#      + area_岡山県
+#      + area_愛媛県
+#      + area_新潟県
+#      + area_島根県
+#      + area_和歌山県
+      + area_熊本県
+      + area_埼玉県
+#      + area_大阪府
+#      + area_大分県
+      + area_徳島県
+      + area_沖縄県
+      + area_三重県
+      + area_秋田県
+      + area_福岡県
+      + sex_X2
+#      + partner_X1
+      + education_X1
+      + education_X2
+      + education_X3
+#      + education_X4
+      + position_education_partner_segment_position_0_education_0_partner_1
+#      + position_education_partner_segment_position_0_education_1_partner_0
+      + position_education_partner_segment_position_0_education_1_partner_1
+##      + position_education_partner_segment_position_0_education_2_partner_0
+      + position_education_partner_segment_position_0_education_2_partner_1
+#      + position_education_partner_segment_position_0_education_3_partner_0
+#      + position_education_partner_segment_position_0_education_3_partner_1
+#      + position_education_partner_segment_position_0_education_4_partner_0
+#      + position_education_partner_segment_position_0_education_4_partner_1
+##      + position_education_partner_segment_position_1_education_0_partner_0
+      + position_education_partner_segment_position_1_education_0_partner_1
+      + position_education_partner_segment_position_1_education_1_partner_1
+      + position_education_partner_segment_position_1_education_2_partner_1
+##      + position_education_partner_segment_position_1_education_3_partner_0
+      + position_education_partner_segment_position_1_education_4_partner_0
+#      + position_education_partner_segment_position_1_education_4_partner_1
+      + position_education_partner_segment_position_2_education_0_partner_1
+      + position_education_partner_segment_position_2_education_1_partner_1
+      + position_education_partner_segment_position_2_education_2_partner_0
+      + position_education_partner_segment_position_2_education_2_partner_1
+#      + position_education_partner_segment_position_2_education_3_partner_0
+#      + position_education_partner_segment_position_2_education_3_partner_1
+#      + position_education_partner_segment_position_2_education_4_partner_0
+#      + position_education_partner_segment_position_2_education_4_partner_1
+      + position_education_partner_segment_position_3_education_0_partner_0
+#      + position_education_partner_segment_position_3_education_0_partner_1
+      + position_education_partner_segment_position_3_education_1_partner_0
+#      + position_education_partner_segment_position_3_education_1_partner_1
+##      + position_education_partner_segment_position_3_education_2_partner_1
+      + position_education_partner_segment_position_3_education_3_partner_1
+#      + position_education_partner_segment_position_3_education_4_partner_0
+#      + position_education_partner_segment_position_3_education_4_partner_1
+#      + position_education_partner_segment_position_4_education_0_partner_0
+#      + position_education_partner_segment_position_4_education_0_partner_1
+      + position_education_partner_segment_position_4_education_1_partner_0
+#      + position_education_partner_segment_position_4_education_1_partner_1
+      + position_education_partner_segment_position_4_education_2_partner_1
+      + position_education_partner_segment_position_4_education_3_partner_1
+      + position_education_partner_segment_position_4_education_4_partner_1
+
       + (1 + commute | area_partner_child_segment),
 
-    data = train_data
+    data = data,
+    control = lme4::lmerControl(optimizer = "bobyqa") # 警告の回避
   )
 
-  if(if_print) {
-    print(model)
-  }
+  print(model)
 
   model
 }
