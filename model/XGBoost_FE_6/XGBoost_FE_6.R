@@ -67,14 +67,14 @@ recipe <- recipes::recipe(salary ~ ., data = df.train_data) %>%
     # 生え抜きフラグ
     flg_newbie = (working_years - service_length <= 1),
 
-    # position x education x partner
-    position_education_partner_segment = stringr::str_c(
-      "position", position,
-      "education", education,
-      "partner", partner,
-      sep = "_"
-    ) %>%
-      factor(),
+    # # position x education x partner
+    # position_education_partner_segment = stringr::str_c(
+    #   "position", position,
+    #   "education", education,
+    #   "partner", partner,
+    #   sep = "_"
+    # ) %>%
+    #   factor(),
 
     # area x partner x child
     area_partner_child_segment = dplyr::case_when(
